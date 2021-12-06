@@ -1,0 +1,63 @@
+function lineTxt = getLine(lineImg)
+
+[r,c] = size(lineImg);
+
+noisePixel = 2 ;
+HerizontalSum = sum(lineImg,1) ;
+
+space_data = [] ; 
+nzero = 0 ;
+
+for i = 1:length(HerizontalSum)
+    if ( HerizontalSum(i) == 0 )
+        nzero = nzero + 1 ;
+    elseif ( nzero ~= 0 )
+        space_data = [space_data  nzero];
+        nzero = 0 ;
+    end
+end
+
+
+
+if ( length(space_data) < 2  )
+    char_space = 0 ;
+else
+    k = 2 ;
+    [index myClass] = kmeans(space_data ,k);
+    char_space = min(myClass);
+end
+
+char_space = floor(char_space)*2;
+
+se = strel('square', char_space );
+I = imdilate(lineImg,se);
+
+%imshow(I);
+HerizontalSum = sum(I,1) ;
+
+word = [] ;
+st = -1 ;
+for i = 1:length(HerizontalSum)
+    if ( st == -1 && HerizontalSum(i) > noisePixel )
+        st = i ;
+    elseif ( st ~= -1 && HerizontalSum(i) < noisePixel )
+        e = i-1 ;
+        word = [word ; cell(1,1)];
+        word{end,1} = lineImg(1:r,st:e) ;
+        st = -1 ;
+    end
+end
+
+lineTxt = [] ;
+for i=1:length(word)
+    wordTxt = getWord(word{i});
+    wordCell = cell(1,1);
+    wordCell = wordTxt ;
+    if ( i == 1 )
+        lineTxt = [lineTxt , wordCell ] ;
+    else
+        lineTxt = [lineTxt , {' '} , wordCell ];
+    end
+end
+
+end
